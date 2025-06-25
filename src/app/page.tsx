@@ -31,19 +31,19 @@ export default function Home() {
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
       {/* Mobile Layout: Vertical Stack */}
       <div className="flex flex-col lg:hidden h-full">
-        {/* Current Event - 10% of screen */}
-        <div className="h-[10vh] min-h-[60px]">
+        {/* Current Event - Fixed small height */}
+        <div className="h-[10vh] min-h-[60px] flex-shrink-0">
           <CurrentEvent event={currentEvent} onEventEnd={refreshData} />
         </div>
 
-        {/* Event Input - 40% of screen */}
-        <div className="h-[40vh] min-h-[240px]">
+        {/* Event Input - Flexible height, no max constraint */}
+        <div className="flex-shrink-0">
           <EventInput onEventCreated={refreshData} />
         </div>
 
-        {/* Analytics - Rest of screen, scrollable */}
+        {/* Analytics - Takes remaining space, scrollable */}
         <div className="flex-1 overflow-hidden">
-          <Analytics />
+          <Analytics key={refreshTrigger} />
         </div>
       </div>
 
@@ -64,7 +64,7 @@ export default function Home() {
 
         {/* Right Column: Analytics */}
         <div className="w-1/2 overflow-hidden">
-          <Analytics />
+          <Analytics key={refreshTrigger} />
         </div>
       </div>
     </div>

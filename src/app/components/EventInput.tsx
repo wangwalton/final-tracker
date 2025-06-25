@@ -115,16 +115,16 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
   };
 
   return (
-    <div className="h-full bg-white border-b lg:border-b-0 border-gray-200 p-4 lg:p-6">
+    <div className="bg-white border-b lg:border-b-0 border-gray-200 p-3 lg:p-6">
       {/* Quick Input Section */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Quick Start</h3>
+      <div className="mb-3 lg:mb-4">
+        <h3 className="text-sm lg:text-base font-semibold mb-2">Quick Start</h3>
         <div className="grid grid-cols-2 gap-2">
           {frequentEvents.map((event) => (
             <button
               key={event.name}
               onClick={() => handleQuickStart(event.name)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors truncate"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-2 lg:px-3 py-1 lg:py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors truncate"
             >
               {event.name}
             </button>
@@ -133,40 +133,56 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
       </div>
 
       {/* Detailed Form */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold mb-4">New Event</h3>
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm lg:text-base font-semibold">New Event</h3>
+          <button
+            type="submit"
+            form="event-form"
+            className="bg-green-500 hover:bg-green-600 text-white px-3 lg:px-4 py-1 lg:py-2 rounded-lg font-medium transition-colors text-xs lg:text-sm"
+          >
+            Create Event
+          </button>
+        </div>
 
-        <form onSubmit={handleDetailedSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Event Name
-            </label>
-            <input
-              type="text"
-              value={eventName}
-              onChange={(e) => setEventName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter event name"
-              required
-            />
+        <form
+          id="event-form"
+          onSubmit={handleDetailedSubmit}
+          className="space-y-2 lg:space-y-3"
+        >
+          {/* Event Name and Start Time - Inline */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Event Name
+              </label>
+              <input
+                type="text"
+                value={eventName}
+                onChange={(e) => setEventName(e.target.value)}
+                className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter event name"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Start Time
+              </label>
+              <input
+                type="datetime-local"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
           </div>
 
+          {/* End Time Options - 3-way toggle in one line */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Start Time
-            </label>
-            <input
-              type="datetime-local"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-
-          <div>
-            <div className="flex flex-col space-y-2 mb-2">
-              <label className="flex items-center">
+            <div className="flex items-center space-x-4 lg:space-x-6 mb-2">
+              <label className="flex items-center text-xs">
                 <input
                   type="radio"
                   checked={useNoDuration}
@@ -174,11 +190,11 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
                     setUseNoDuration(true);
                     setUseEndTime(false);
                   }}
-                  className="mr-2"
+                  className="mr-1"
                 />
-                No specific end time
+                No end time
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center text-xs">
                 <input
                   type="radio"
                   checked={!useNoDuration && !useEndTime}
@@ -186,11 +202,11 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
                     setUseNoDuration(false);
                     setUseEndTime(false);
                   }}
-                  className="mr-2"
+                  className="mr-1"
                 />
-                Duration (minutes)
+                Duration
               </label>
-              <label className="flex items-center">
+              <label className="flex items-center text-xs">
                 <input
                   type="radio"
                   checked={useEndTime}
@@ -198,21 +214,23 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
                     setUseEndTime(true);
                     setUseNoDuration(false);
                   }}
-                  className="mr-2"
+                  className="mr-1"
                 />
-                Specific end time
+                End time
               </label>
             </div>
 
+            {/* Conditional inputs */}
             {useEndTime ? (
               <input
                 type="datetime-local"
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                placeholder="End time"
               />
             ) : !useNoDuration ? (
-              <div className="space-y-2">
+              <div className="flex items-center space-x-2">
                 <input
                   type="range"
                   min="0"
@@ -220,29 +238,23 @@ export default function EventInput({ onEventCreated }: EventInputProps) {
                   step="15"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
-                  className="w-full"
+                  className="flex-1"
                 />
                 <input
                   type="number"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Duration in minutes"
+                  className="w-16 lg:w-20 px-2 py-1 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="mins"
                 />
+                <span className="text-xs text-gray-500">mins</span>
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic">
+              <p className="text-xs text-gray-500 italic">
                 Event will continue until manually ended
               </p>
             )}
           </div>
-
-          <button
-            type="submit"
-            className="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            Create Event
-          </button>
         </form>
       </div>
     </div>

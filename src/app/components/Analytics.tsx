@@ -5,10 +5,12 @@ import {
   getDayAggregation,
   getWeekAggregation,
   getAllEvents,
+  updateEvent,
+  deleteEvent,
   type SelectEvent,
 } from "../../db/actions";
 
-type Tab = "day" | "week" | "detailed";
+type Tab = "detailed" | "day" | "week";
 
 interface AggregationData {
   name: string;
@@ -16,11 +18,18 @@ interface AggregationData {
 }
 
 export default function Analytics() {
-  const [activeTab, setActiveTab] = useState<Tab>("day");
+  const [activeTab, setActiveTab] = useState<Tab>("detailed");
   const [dayData, setDayData] = useState<AggregationData[]>([]);
   const [weekData, setWeekData] = useState<AggregationData[]>([]);
   const [detailedEvents, setDetailedEvents] = useState<SelectEvent[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    startTime: "",
+    endTime: "",
+    hasEndTime: false,
+  });
 
   useEffect(() => {
     loadData();
@@ -84,6 +93,16 @@ export default function Analytics() {
   const formatTime = (date: string | Date): string => {
     const d = new Date(date);
     return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDateTimeLocal = (date: string | Date): string => {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   const calculateEventDuration = (event: SelectEvent): number => {
@@ -156,7 +175,7 @@ export default function Analytics() {
 
     return (
       <div className="p-4">
-        <h3 className="text-lg font-semibold mb-4">Detailed Events</h3>
+        <h3 className="text-lg font-semibold mb-4">Events</h3>
         {loading ? (
           <div className="text-center py-8">Loading...</div>
         ) : sortedDates.length === 0 ? (
@@ -174,28 +193,164 @@ export default function Analytics() {
                 <div className="p-3 space-y-2">
                   {groupedEvents[date].map((event) => {
                     const duration = calculateEventDuration(event);
+                    const isEditing = editingEvent === event.id;
+
                     return (
                       <div
                         key={event.id}
-                        className="flex justify-between items-center py-2"
+                        className="border border-gray-100 rounded-lg p-3"
                       >
-                        <div>
-                          <div className="font-medium">{event.name}</div>
-                          <div className="text-sm text-gray-500">
-                            {formatTime(event.startTime)}
-                            {event.endTime
-                              ? ` - ${formatTime(event.endTime)}`
-                              : " (ongoing)"}
+                        {isEditing ? (
+                          <div className="space-y-2 lg:space-y-3">
+                            {/* Event Name and Start Time - Inline */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 lg:gap-4">
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Event Name
+                                </label>
+                                <input
+                                  type="text"
+                                  value={editForm.name}
+                                  onChange={(e) =>
+                                    setEditForm({
+                                      ...editForm,
+                                      name: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="Event name"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">
+                                  Start Time
+                                </label>
+                                <input
+                                  type="datetime-local"
+                                  value={editForm.startTime}
+                                  onChange={(e) =>
+                                    setEditForm({
+                                      ...editForm,
+                                      startTime: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+
+                            {/* End Time Options - 3-way toggle in one line */}
+                            <div>
+                              <div className="flex items-center space-x-4 lg:space-x-6 mb-2">
+                                <label className="flex items-center text-xs">
+                                  <input
+                                    type="radio"
+                                    checked={!editForm.hasEndTime}
+                                    onChange={() =>
+                                      setEditForm({
+                                        ...editForm,
+                                        hasEndTime: false,
+                                        endTime: "",
+                                      })
+                                    }
+                                    className="mr-1"
+                                  />
+                                  No end time
+                                </label>
+                                <label className="flex items-center text-xs">
+                                  <input
+                                    type="radio"
+                                    checked={
+                                      editForm.hasEndTime &&
+                                      editForm.endTime !== ""
+                                    }
+                                    onChange={() =>
+                                      setEditForm({
+                                        ...editForm,
+                                        hasEndTime: true,
+                                      })
+                                    }
+                                    className="mr-1"
+                                  />
+                                  End time
+                                </label>
+                              </div>
+
+                              {/* Conditional input */}
+                              {editForm.hasEndTime && (
+                                <input
+                                  type="datetime-local"
+                                  value={editForm.endTime}
+                                  onChange={(e) =>
+                                    setEditForm({
+                                      ...editForm,
+                                      endTime: e.target.value,
+                                    })
+                                  }
+                                  className="w-full px-2 lg:px-3 py-1 lg:py-2 border border-gray-300 rounded text-xs lg:text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="End time"
+                                />
+                              )}
+                              {!editForm.hasEndTime && (
+                                <p className="text-xs text-gray-500 italic">
+                                  Event will continue until manually ended
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={handleSaveEdit}
+                                className="px-3 py-1 bg-green-500 text-white text-xs lg:text-sm rounded hover:bg-green-600 font-medium"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="px-3 py-1 bg-gray-500 text-white text-xs lg:text-sm rounded hover:bg-gray-600 font-medium"
+                              >
+                                Cancel
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        {duration > 0 && (
-                          <div className="text-blue-600 font-medium">
-                            {formatDuration(duration)}
-                          </div>
-                        )}
-                        {!event.endTime && (
-                          <div className="text-green-600 font-medium text-sm">
-                            Active
+                        ) : (
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="font-medium">{event.name}</div>
+                              <div className="text-sm text-gray-500">
+                                {formatTime(event.startTime)}
+                                {event.endTime
+                                  ? ` - ${formatTime(event.endTime)}`
+                                  : " (ongoing)"}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {duration > 0 && (
+                                <div className="text-blue-600 font-medium text-sm">
+                                  {formatDuration(duration)}
+                                </div>
+                              )}
+                              {!event.endTime && (
+                                <div className="text-green-600 font-medium text-xs">
+                                  Active
+                                </div>
+                              )}
+                              <button
+                                onClick={() => handleEditEvent(event)}
+                                className="text-blue-500 hover:text-blue-700 text-xs"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleDeleteEvent(event.id, event.name)
+                                }
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -210,10 +365,67 @@ export default function Analytics() {
     );
   };
 
+  const handleEditEvent = (event: SelectEvent) => {
+    setEditingEvent(event.id);
+    setEditForm({
+      name: event.name,
+      startTime: formatDateTimeLocal(event.startTime),
+      endTime: event.endTime ? formatDateTimeLocal(event.endTime) : "",
+      hasEndTime: !!event.endTime,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingEvent) return;
+
+    try {
+      const updateData = {
+        name: editForm.name,
+        startTime: new Date(editForm.startTime),
+        endTime:
+          editForm.hasEndTime && editForm.endTime
+            ? new Date(editForm.endTime)
+            : null,
+      };
+
+      await updateEvent(editingEvent, updateData);
+      setEditingEvent(null);
+      loadData(); // Refresh the data
+    } catch (error) {
+      console.error("Failed to update event:", error);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingEvent(null);
+    setEditForm({ name: "", startTime: "", endTime: "", hasEndTime: false });
+  };
+
+  const handleDeleteEvent = async (eventId: number, eventName: string) => {
+    if (confirm(`Are you sure you want to delete "${eventName}"?`)) {
+      try {
+        await deleteEvent(eventId);
+        loadData(); // Refresh the data
+      } catch (error) {
+        console.error("Failed to delete event:", error);
+      }
+    }
+  };
+
   return (
     <div className="h-full bg-white flex flex-col">
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab("detailed")}
+          className={`flex-1 py-3 px-4 text-sm font-medium ${
+            activeTab === "detailed"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Events
+        </button>
         <button
           onClick={() => setActiveTab("day")}
           className={`flex-1 py-3 px-4 text-sm font-medium ${
@@ -234,23 +446,13 @@ export default function Analytics() {
         >
           Week
         </button>
-        <button
-          onClick={() => setActiveTab("detailed")}
-          className={`flex-1 py-3 px-4 text-sm font-medium ${
-            activeTab === "detailed"
-              ? "border-b-2 border-blue-500 text-blue-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Events
-        </button>
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
+        {activeTab === "detailed" && renderDetailedView()}
         {activeTab === "day" && renderAggregationView(dayData, "Today")}
         {activeTab === "week" && renderAggregationView(weekData, "This Week")}
-        {activeTab === "detailed" && renderDetailedView()}
       </div>
     </div>
   );

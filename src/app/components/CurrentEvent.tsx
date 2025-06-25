@@ -77,17 +77,21 @@ export default function CurrentEvent({ event, onEventEnd }: CurrentEventProps) {
   return (
     <div className="h-full bg-blue-50 border-b border-blue-200 flex items-center justify-between px-4 lg:px-6">
       <div className="flex-1 min-w-0">
-        <h2 className="font-semibold text-blue-900 text-base lg:text-lg truncate">
-          {event.name}
-        </h2>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:space-x-2">
-          <p className="text-blue-700 text-sm font-mono">{duration}</p>
-          <p className="text-blue-600 text-xs">Started: {startTimeDisplay}</p>
+        <div className="flex items-center space-x-2 lg:space-x-3">
+          <h2 className="font-semibold text-blue-900 text-sm lg:text-base truncate">
+            {event.name}
+          </h2>
+          <span className="text-blue-700 text-xs lg:text-sm font-mono">
+            {duration}
+          </span>
+          <span className="text-blue-600 text-xs">
+            Started: {startTimeDisplay}
+          </span>
         </div>
       </div>
       <button
         onClick={handleEndEvent}
-        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ml-4"
+        className="bg-red-500 hover:bg-red-600 text-white px-3 lg:px-4 py-1 lg:py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors flex-shrink-0 ml-4"
       >
         End
       </button>
